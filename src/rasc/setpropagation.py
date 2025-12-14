@@ -75,6 +75,8 @@ class SetPropagation(Technique, ABC):
             #objSet: Set = SetUTS.rangeOfSets(listSet)
             #listSet = [SetUTS.toIntervalStarSet(objSet)]
             Log.message("                       "+str(len(listSet))+"\n")
+            for SP in listSet:
+                Log.message(SP.display())
 
         return listSet
 

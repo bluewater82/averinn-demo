@@ -14,6 +14,7 @@ from src.solver.gurobi import Gurobi
 from src.solver.solver import Solver
 from src.types.datatype import DataType
 from src.types.sign import Sign
+from src.utilities.log import Log
 
 
 class IntervalStarSet(Set, ABC):
@@ -461,6 +462,13 @@ class IntervalStarSet(Set, ABC):
         Display the set
         :return: None
         """
-        # The following line are for just returning (not for implementation)
+        msg = "Lower Basis Matrix\n"
+        msg += str(self.__objIMBasisV__.getMatLow())+"\n"
+        msg += "Upper Basis Matrix\n"
+        msg += str(self.__objIMBasisV__.getMatHigh()) + "\n"
+        msg += "Predicate Matrix\n"
+        msg += str(self.__matConstraintC__)+"\n"
+        msg += "Predicate Constant\n"
+        msg += str(self.__arrayConstraintd__)+"\n"
 
-        return ""
+        return msg

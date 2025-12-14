@@ -94,10 +94,28 @@ class Partition:
             # Number of NodeIds that needs to be merged
             intNumOfNodes: int = len(dictNodeIds[i])
             intSize: int = intNumOfNodes//numOfAbsNodes
-            if i == 1 or i == objGNN.getNumOfLayers() or intSize == 0:
-                intSize = 1
+            if i == 1 or i == objGNN.getNumOfLayers():
+                dictLayerPartition: Dict[int, set[int]] = dict()
+                # Iterate the list
+                k: int = 0
+                j: int = 1
+                listIds = dictNodeIds[i]
+                intLength: int = len(listIds)
+                size = 1
+                while k < intLength:
+                    if k + size <= intLength:
+                        dictLayerPartition[j] = set(listIds[k:k + size])
+                    else:
+                        dictLayerPartition[j] = set(listIds[k:intLength])
+                    k += size
+                    j += 1
 
-            dictPartition[i] = self.__layerwisePartition__(dictNodeIds[i], intSize, numOfAbsNodes)
+                dictPartition[i] = dictLayerPartition
+            elif intSize == 0:
+                intSize = 1
+                dictPartition[i] = self.__layerwisePartition__(dictNodeIds[i], intSize, numOfAbsNodes)
+            else:
+                dictPartition[i] = self.__layerwisePartition__(dictNodeIds[i], intSize, numOfAbsNodes)
         # Return dictPartition
         return dictPartition
 
@@ -122,6 +140,7 @@ class Partition:
         dictPartition: Dict[int, Dict[int, set[int]]] = dict()
         for i in range(1, objGNN.getNumOfLayers() + 1, 1):
             # Number of INodeIds that needs to be merged
+
             intNumOfINodes: int = len(dictNodeIds[i])
             intSize: int = intNumOfINodes // numOfAbsNodes
             if i == 1 or i == objGNN.getNumOfLayers() or intSize == 0:

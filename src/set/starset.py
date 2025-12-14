@@ -195,7 +195,7 @@ class StarSet(Set, ABC):
         # Return affine StarSet
         return objStarSet
 
-    def intersectPositiveHalfSpaceByIndex(self, intIndex: int) -> Set:
+    def intersectPHSByIndex(self, intIndex: int) -> Set:
         """
         Compute intersection between self and a specific half space by index
         intersection(self x[index]>=0)
@@ -209,7 +209,7 @@ class StarSet(Set, ABC):
 
         # Compute column vector for the predicate constraint
         arrayConstraintIPHSd: npt.ArrayLike = np.concatenate((self.__arrayConstraintd__,
-                                                              np.array([[self.__matBasisV__[intIndex][0]]])), axis=0)
+                                                              np.array([self.__matBasisV__[intIndex][0]])), axis=0)
 
         # Create star set for the intersection
         objIPHSStarSet: Set = StarSet(self.__matBasisV__, matConstraintIPHSC, arrayConstraintIPHSd)
@@ -217,7 +217,7 @@ class StarSet(Set, ABC):
         # Return the star set for the intersection
         return objIPHSStarSet
 
-    def intersectNegativeHalfSpaceByIndex(self, intIndex: int) -> Set:
+    def intersectNHSByIndex(self, intIndex: int) -> Set:
         """
         Compute intersection between self and a specific half space by index
         intersection(self x[index]<=0)
@@ -231,7 +231,7 @@ class StarSet(Set, ABC):
 
         # Compute column vector for the predicate constraint
         arrayConstraintINHSd: npt.ArrayLike = np.concatenate((self.__arrayConstraintd__,
-                                                              np.array([[-self.__matBasisV__[intIndex][0]]])), axis=0)
+                                                              np.array([-self.__matBasisV__[intIndex][0]])), axis=0)
 
         # Create star set for the intersection
         objINHSStarSet: Set = StarSet(self.__matBasisV__, matConstraintINHSC, arrayConstraintINHSd)
@@ -444,6 +444,11 @@ class StarSet(Set, ABC):
         Display the set
         :return: None
         """
-        # The following line are for just returning (not for implementation)
+        msg = "Lower Basis Matrix\n"
+        msg += str(self.__matBasisV__) + "\n"
+        msg += "Predicate Matrix\n"
+        msg += str(self.__matConstraintC__) + "\n"
+        msg += "Predicate Constant\n"
+        msg += str(self.__arrayConstraintd__) + "\n"
 
-        return ""
+        return msg

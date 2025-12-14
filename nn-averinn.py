@@ -156,6 +156,10 @@ if absRequired == "YES":
 objGNNUse: GNN = None
 if absRequired == "YES":
     objGNNUse = objGNNAbs
+    try:
+        objGNNUse.display()
+    except:
+        Log.message("For Large Network no display")
 else:
     objGNNUse = objGNN
 
