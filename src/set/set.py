@@ -218,9 +218,11 @@ class Set(metaclass=ABCMeta):
         """
         pass
 
-    def getModelVars(self) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
+    def getModelVars(self, varName: str) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
         """"
         Get encoding of a set and dictionary of variables
+        :param varName: first letter of variable names
+        :type varName: str
         :return: (ModelVars -> Tuple[Model, Dict[Dict[int, Var]]])
         """
         pass

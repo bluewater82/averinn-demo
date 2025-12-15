@@ -1,20 +1,20 @@
 \ LP format - for model browsing. Use MPS format to capture full model detail.
-\ Signature: 0x498487bd41bf558c
+\ Signature: 0xd9d330da5b987762
 Maximize
-  x_1
+  X_2
 Subject To
- R0: x_0 - alpha_0 - 1.625 alpha_1 = 6.375
- R1: x_1 - alpha_0 + 1.625 alpha_1 - 1.875 alpha_2 = 5.25
- R2: alpha_0 <= 1
- R3: - alpha_0 <= 1
+ R0: X_1 >= 1
+ R1: X_2 >= 1
+ R2: X_1 <= 1
+ R3: X_2 <= 1
  R4: alpha_1 <= 1
  R5: - alpha_1 <= 1
  R6: alpha_2 <= 1
  R7: - alpha_2 <= 1
+ R8: 0.25 alpha_1 - 0.5 alpha_2 <= 1.75
 Bounds
- x_0 free
- x_1 free
- alpha_0 free
+ X_1 free
+ X_2 free
  alpha_1 free
  alpha_2 free
 End

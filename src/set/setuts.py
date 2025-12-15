@@ -198,15 +198,20 @@ class SetUTS:
         return strGRBSet
 
     @staticmethod
-    def intersectWithUnsafe(objSet: Set, outputConstr: npt.ArrayLike, solverType: SolverType) -> bool:
+    def intersectWithUnsafe(objSet: Set, outputConstr: npt.ArrayLike, solverType: SolverType, varName: str) -> bool:
         """
         "param objSet: an instance of Set
         :type objSet: Set
         :param outputConstr: tuple in the form ([A1, A2,...], [b1,b2,...])
+        :type outputConstr: npt.ArrayLike
+        :param solverType: an instance of SolverType
+        :type solverType: SolverType
+        :param varName: first letter of variable name
+        :type varName: str
         :return: bool (True if intersect or False otherwise)
         """
         # Encode the set
-        grbModel, dictVars = objSet.getModelVars()
+        grbModel, dictVars = objSet.getModelVars(varName)
 
         # Encode unsafe set
         listA: npt.ArrayLike = outputConstr[0]

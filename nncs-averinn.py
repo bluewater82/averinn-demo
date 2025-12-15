@@ -243,7 +243,7 @@ elif probType == ProbType.SAFETY:
     Log.message("       Lower: " + str(rangeSet[0]) + "\n")
     Log.message("       Upper: " + str(rangeSet[1]) + "\n")
     Log.message("Safety Checking \n")
-    isIntersect: bool = SetUTS.intersectWithUnsafe(objStateSet, outputConstr, solverType)
+    isIntersect: bool = SetUTS.intersectWithUnsafe(objStateSet, outputConstr, solverType, 'X')
     if isIntersect:
         Log.message("Safety Status: Unsafe \n")
     else:

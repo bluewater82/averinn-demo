@@ -292,7 +292,7 @@ class IntervalStarSet(Set, ABC):
         Return the range of the IntervalStarSet
         """
         # Encode Interval Star Set in Gurobi
-        grbModel, dictVars = self.__encode__()
+        grbModel, dictVars = self.__encode__("X")
         objSolver: Solver = Gurobi(grbModel, dictVars)
         objSet: Set = objSolver.outputRange()
         rangeISS: Tuple[npt.ArrayLike, npt.ArrayLike] = (objSet.getArrayLow(), objSet.getArrayHigh())
@@ -304,20 +304,20 @@ class IntervalStarSet(Set, ABC):
         :return: (status -> bool)
         """
         # Encode Interval Star Set in Gurobi
-        grbModel, dictVars = self.__encode__()
+        grbModel, dictVars = self.__encode__("X")
         objSolver: Solver = Gurobi(grbModel, dictVars)
         if objSolver.satisfy():
             return False
         else:
             return True
 
-    def getModelVars(self) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
+    def getModelVars(self, varName: str) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
         """"
         Get encoding of a set and dictionary of variables
         :return: (ModelVars -> Tuple[Model, Dict[Dict[int, Var]]])
         """
         # Encode Interval Star Set in Gurobi
-        grbModel, dictVars = self.__encode__()
+        grbModel, dictVars = self.__encode__(varName)
 
         # Return Model and DictVars
         return grbModel, dictVars
@@ -325,18 +325,18 @@ class IntervalStarSet(Set, ABC):
     ############################################
     ############## Private Methods #############
     ############################################
-    def __encode__(self) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
+    def __encode__(self, varName: str) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
         """"
         Encode Interval Star Set into Gurobi format
         :return: (grbModel -> Model)
         """
         # Create state variables
         intDim: int = self.getDimension()
-        listStateVars: List[str] = ['x_' + str(i) for i in range(intDim)]
+        listStateVars: List[str] = [varName+'_' + str(i+1) for i in range(intDim)]
 
         # Create predicate variables
         intPredVars: int = self.getNumOfPredVars()
-        listPredVars: List[str] = ['alpha_' + str(j) for j in range(intPredVars)]
+        listPredVars: List[str] = ['alpha_' + str(j+1) for j in range(intPredVars)]
 
         # Create a gurobi model
         grbModel: Model = Model()
@@ -462,13 +462,17 @@ class IntervalStarSet(Set, ABC):
         Display the set
         :return: None
         """
-        msg = "Lower Basis Matrix\n"
-        msg += str(self.__objIMBasisV__.getMatLow())+"\n"
-        msg += "Upper Basis Matrix\n"
-        msg += str(self.__objIMBasisV__.getMatHigh()) + "\n"
-        msg += "Predicate Matrix\n"
+        msg = "Lower Center (CLow)\n"
+        msg += str(self.__objIMBasisV__.getColumnIAByIndex(0).getArrayLow())+"\n"
+        msg += "Upper Center (CHigh)\n"
+        msg += str(self.__objIMBasisV__.getColumnIAByIndex(0).getArrayHigh()) + "\n"
+        msg += "Lower Vertices (VLow)\n"
+        msg += str(self.__objIMBasisV__.getMatLow()[:, 1:]) + "\n"
+        msg += "Upper Vertices (VHigh)\n"
+        msg += str(self.__objIMBasisV__.getMatHigh()[:, 1:]) + "\n"
+        msg += "Predicate (A*alpha <= B, Matrix A)\n"
         msg += str(self.__matConstraintC__)+"\n"
-        msg += "Predicate Constant\n"
+        msg += "Predicate Constant (B)\n"
         msg += str(self.__arrayConstraintd__)+"\n"
 
         return msg

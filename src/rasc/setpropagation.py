@@ -50,8 +50,11 @@ class SetPropagation(Technique, ABC):
         # Get number of layer
         numOfLayer: int = self.__objGNN__.getNumOfLayers()
         listSet: List[Set] = [self.__objSet__]
-        Log.message("       After Layer         Number of Interval Stars\n")
+        Log.message("Initial set\n")
+        Log.message(self.__objSet__.display())
+
         for i in range(1, numOfLayer, 1):
+            Log.message("       After Layer         Number of Interval Stars\n")
             Log.message("           "+ str(i+1))
             listTempSet = []
             # Find lower and upper weight matrices
@@ -75,8 +78,11 @@ class SetPropagation(Technique, ABC):
             #objSet: Set = SetUTS.rangeOfSets(listSet)
             #listSet = [SetUTS.toIntervalStarSet(objSet)]
             Log.message("                       "+str(len(listSet))+"\n")
+            setNumber: int = 1
             for SP in listSet:
+                Log.message("Set "+ str(setNumber)+"\n")
                 Log.message(SP.display())
+                setNumber += 1
 
         return listSet
 

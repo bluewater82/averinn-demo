@@ -216,13 +216,13 @@ class Box(Set, ABC):
                 return True
         return False
 
-    def getModelVars(self) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
+    def getModelVars(self, varName: str) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
         """"
         Get encoding of a set and dictionary of variables
         :return: (ModelVars -> Tuple[Model, Dict[Dict[int, Var]]])
         """
         # Encode Interval Star Set in Gurobi
-        grbModel, dictVars = self.__encode__()
+        grbModel, dictVars = self.__encode__(varName)
 
         # Return Model and DictVars
         return grbModel, dictVars
@@ -265,14 +265,14 @@ class Box(Set, ABC):
 
         return sign
 
-    def __encode__(self) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
+    def __encode__(self, varName: str) -> Tuple[Model, Dict[int, Dict[int, Var]]]:
         """"
         Encode Interval Star Set into Gurobi format
         :return: (grbModel -> Model)
         """
         # Create state variables
         intDim: int = self.getDimension()
-        listStateVars: List[str] = ['x_' + str(i) for i in range(intDim)]
+        listStateVars: List[str] = [varName+'_' + str(i+1) for i in range(intDim)]
         # Create state variables in gurobi
         grbModel: Model = Model()
         grbStateVars = []
