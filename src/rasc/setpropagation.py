@@ -54,7 +54,7 @@ class SetPropagation(Technique, ABC):
         Log.message(self.__objSet__.display())
 
         for i in range(1, numOfLayer, 1):
-            Log.message("       After Layer         Number of Interval Stars\n")
+            Log.message("       After Layer         Number of Stars\n")
             Log.message("           "+ str(i+1))
             listTempSet = []
             # Find lower and upper weight matrices
