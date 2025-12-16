@@ -2,7 +2,7 @@ Neural Network
        Matrices and Biases
         L2 to L1                              L3 to L2                              
        1:[1.0, -1.0]        -1.0            1:[1.0, 0.5]        1.0
-       2:[0.5, 1.5]        1.0            2:[0.0, -1.0]        1.0
+       2:[0.5, 2.0]        1.0            2:['-', '-']        -
 Specification
        Input Set
        Lower: [1. 1.]
@@ -10,7 +10,6 @@ Specification
        Unsafe Property (A1X<=b1 or A2X<=b1 or ...)
         Property 1
         [-1.  0.]      -10.0
-        [ 0. -1.]      -10.0
 Number of Interval Stars after each layer
 Initial set
 Center (C)
@@ -29,66 +28,64 @@ Predicate Constant (B)
            2                       2
 Set 1
 Center (C)
-[-1.0 4.0]
+[-1.0 4.75]
 Vertices (V)
 [[0.5 -0.5]
- [0.25 0.75]]
+ [0.25 1.0]]
 Predicates (P): A*alpha<=B, Matrix A
 [[1.0 0.0]
  [-1.0 0.0]
  [0.0 1.0]
  [0.0 -1.0]
  [-0.5 0.5]
- [-0.25 -0.75]]
+ [-0.25 -1.0]]
 Predicate Constant (B)
-[ 1.  1.  1.  1. -1.  4.]
+[ 1.    1.    1.    1.   -1.    4.75]
 Set 2
 Center (C)
-[0.0 4.0]
+[0.0 4.75]
 Vertices (V)
 [[0.0 0.0]
- [0.25 0.75]]
+ [0.25 1.0]]
 Predicates (P): A*alpha<=B, Matrix A
 [[1.0 0.0]
  [-1.0 0.0]
  [0.0 1.0]
  [0.0 -1.0]
  [0.5 -0.5]
- [-0.25 -0.75]]
+ [-0.25 -1.0]]
 Predicate Constant (B)
-[1. 1. 1. 1. 1. 4.]
+[1.   1.   1.   1.   1.   4.75]
        After Layer         Number of Stars
            3                       2
 Set 1
 Center (C)
-[2.0 -3.0]
+[2.375]
 Vertices (V)
-[[0.625 -0.125]
- [-0.25 -0.75]]
+[[0.625 0.0]]
 Predicates (P): A*alpha<=B, Matrix A
 [[1.0 0.0]
  [-1.0 0.0]
  [0.0 1.0]
  [0.0 -1.0]
  [-0.5 0.5]
- [-0.25 -0.75]]
+ [-0.25 -1.0]]
 Predicate Constant (B)
-[ 1.  1.  1.  1. -1.  4.]
+[ 1.    1.    1.    1.   -1.    4.75]
 Set 2
 Center (C)
-[3.0 -3.0]
+[3.375]
 Vertices (V)
-[[0.125 0.375]
- [-0.25 -0.75]]
+[[0.125 0.5]]
 Predicates (P): A*alpha<=B, Matrix A
 [[1.0 0.0]
  [-1.0 0.0]
  [0.0 1.0]
  [0.0 -1.0]
  [0.5 -0.5]
- [-0.25 -0.75]]
+ [-0.25 -1.0]]
 Predicate Constant (B)
-[1. 1. 1. 1. 1. 4.]
+[1.   1.   1.   1.   1.   4.75]
 Reach Set 
-       Lower: [2.5, -4.0]
-       Upper: [3.5, -2.0]
+       Lower: [2.75]
+       Upper: [4.0]
