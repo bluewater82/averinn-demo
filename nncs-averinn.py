@@ -103,9 +103,9 @@ matBC = json.loads(dynfile.get('settings', 'matB'))
 # If C is not in the dynamics, use NONE
 arrayCC = json.loads(dynfile.get('settings', 'arrayC'))
 # listA for unsafe set
-listA = json.loads(dynfile.get('settings', 'listA'))
+#listA = json.loads(dynfile.get('settings', 'listA'))
 # listB for unsafe set
-listB = json.loads(dynfile.get('settings', 'listB'))
+#listB = json.loads(dynfile.get('settings', 'listB'))
 ##################################
 ########## Parameters  ###########
 ##################################
@@ -191,7 +191,7 @@ objStateSet = Spec.getInput(ioSpec)
 dictForDataFrame[str(0)+"Low"] = np.insert(objStateSet.getArrayLow(), objStateSet.getDimension(), 0)
 dictForDataFrame[str(0)+"High"] = np.insert(objStateSet.getArrayHigh(), objStateSet.getDimension(), 0)
 outputConstr = Spec.getOutput(ioSpec)
-outputConstr = (np.array(listA, dtype=np.float64), np.array(listB, dtype=np.float64))
+#outputConstr = (np.array(listA, dtype=np.float64), np.array(listB, dtype=np.float64))
 Log.message("Specification\n")
 Log.message("       Input Set\n")
 Log.message("       Lower: "+str(objStateSet.getArrayLow())+"\n")
