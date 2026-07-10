@@ -16,7 +16,8 @@ function VerifTypePanel({ onSelectType }) {
                         onClick={() => onSelectType("nn")}
                     >
                         <img src={NNImage} className="type-icon" alt="Neural Network" />
-                        <span>NN Controller</span>
+                        <span>Neural Network</span>
+                        <span>Property Checking</span>
                     </button>
                 </div>
 
@@ -24,17 +25,6 @@ function VerifTypePanel({ onSelectType }) {
                     <button
                         className="verif-type-card"
                         onClick={() => onSelectType("nncs")}
-                    >
-                        <img src={NNCSImage} className="type-icon-enlarge" alt="NNCS" />
-                        <span>NN Controller</span>
-                        <span>With Dynamics</span>
-                    </button>
-                </div>
-
-                <div className="col-md-4">
-                    <button
-                        className="verif-type-card"
-                        onClick={() => onSelectType("linear-system")}
                     >
                         <img src={LinearUp} className="type-icon" alt="Linear System" />
                         <span>NN-Controlled</span>
@@ -45,20 +35,31 @@ function VerifTypePanel({ onSelectType }) {
                 <div className="col-md-4">
                     <button
                         className="verif-type-card"
-                        onClick={() => onSelectType("nonlinear-system")}
+                        onClick={() => onSelectType("linear-system")}
                     >
-                        <img src={NonLinear} className="type-icon" alt="Nonlinear System" />
+                        <img src={NonLinear} className="type-icon" alt="Linear System" />
                         <span>NN-Controlled</span>
-                        <span>Nonlinear System</span>
+                        <span>Non-Linear System</span>
                     </button>
                 </div>
 
                 <div className="col-md-4">
                     <button
                         className="verif-type-card"
-                        onClick={() => onSelectType("todo-1")}
+                        onClick={() => onSelectType("nonlinear-system")}
                     >
-                        <img src={SimLink} className="type-icon" alt="TODO 1" />
+                        <img src={NNCSImage} className="type-icon-enlarge" alt="NNCS" />
+                        <span>NN-Controlled</span>
+                        <span>Hybrid System</span>
+                    </button>
+                </div>
+
+                <div className="col-md-4">
+                    <button
+                        className="verif-type-card"
+                        onClick={() => onSelectType("simulink-system")}
+                    >
+                        <img src={SimLink} className="type-icon" alt="simulink-system" />
                         <span>Simulink Systems</span>
                     </button>
                 </div>

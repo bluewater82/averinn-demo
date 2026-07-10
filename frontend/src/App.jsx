@@ -1,11 +1,14 @@
-import { useState } from "react";
+import { useState, createContext } from "react";
 import "./App.css";
 import Header from "./Header";
 import ProgressSteps from "./ProgressSteps";
 import SettingsSection from "./SettingsSection";
 import UploadCard from "./UploadCard";
 import ResultsPanel from "./ResultsPanel";
+import Simulink from "./simulink/Simulink.jsx";
 import VerifTypePanel from "./VerifTypePanel.jsx";
+
+export const slContext = createContext(null);
 
 function App() {
     const [backendStatus, setBackendStatus] = useState(null);
@@ -32,191 +35,226 @@ function App() {
     const [propertyType, setPropertyType] = useState("VNNLIB");
     const [propertyFile, setPropertyFile] = useState(null);
 
+    const isAverinnType = verificationType === "nn" || verificationType === "nncs";
+    const isSimulinkType = verificationType === "simulink-system";
+
+    const contextData = {
+        currentStep,
+        setCurrentStep,
+        currentType: verificationType,
+        setCurrentType: setVerificationType
+    };
+
+    const [isVerifying, setIsVerifying] = useState(false);
+
     function handleVerificationTypeSelection(type) {
         setVerificationType(type);
 
-        if (type === "nn" || type === "nncs") {
+        if (type === "nn" || type === "nncs" || type === "simulink-system") {
             setCurrentStep(2);
         }
     }
 
+
     async function callAPI() {
-        const formData = new FormData();
+        if (isVerifying) return;
 
-        formData.append("settings", JSON.stringify({
-            ...settings,
-            nnformat: networkFormat,
-            specformat: propertyType
-        }));
+        setIsVerifying(true);
 
-        formData.append("network_file", networkFile);
-        formData.append("property_file", propertyFile);
+        try {
+            const formData = new FormData();
 
-        if (verificationType === "nncs") {
-            formData.append("dynamics_file", dynamicsFile);
+            formData.append("settings", JSON.stringify({
+                ...settings,
+                nnformat: networkFormat,
+                specformat: propertyType
+            }));
+
+            formData.append("network_file", networkFile);
+            formData.append("property_file", propertyFile);
+
+            const endpoint = verificationType === "nn"
+                ? "http://localhost:8000/run-nn-averinn"
+                : "http://localhost:8000/run-nncs-averinn";
+
+            if (verificationType === "nncs") {
+                formData.append("dynamics_file", dynamicsFile);
+            }
+
+            const response = await fetch(endpoint, {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+
+            setBackendStatus(data);
+            setCurrentStep(4);
+
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsVerifying(false);
         }
-
-        const response = await fetch("http://localhost:8000/run-nncs-averinn", {
-            method: "POST",
-            body: formData
-        });
-
-        const data = await response.json();
-        setBackendStatus(data);
-        setCurrentStep(4);
     }
 
     return (
-        <div className="background">
-            <Header />
+        <slContext.Provider value={contextData}>
+            <div className="background">
+                <Header />
 
-            <ProgressSteps
-                currentStep={currentStep}
-                setCurrentStep={setCurrentStep}
-            />
+                <ProgressSteps
+                    currentStep={currentStep}
+                    setCurrentStep={setCurrentStep}
+                />
 
-            {currentStep === 1 && (
-                <div>
-                    <h1 className="h3 fw-bold text-center">
-                        Select Verification Type
-                    </h1>
+                {currentStep === 1 && (
+                    <div>
+                        <h1 className="h3 fw-bold text-center">
+                            Select Verification Type
+                        </h1>
 
-                    <VerifTypePanel onSelectType={handleVerificationTypeSelection} />
-                </div>
-            )}
+                        <VerifTypePanel onSelectType={handleVerificationTypeSelection} />
+                    </div>
+                )}
 
-            {currentStep === 2 && (
-                <section className="container py-4">
-                    <h1 className="h3 fw-bold">
-                        Neural Network Property Checking
-                    </h1>
+                {isSimulinkType && currentStep > 1 && (
+                    <Simulink />
+                )}
 
-                    <p className="fs-5">
-                        Provide the model and property file to continue.
-                    </p>
+                {isAverinnType && currentStep === 2 && (
+                    <section className="container py-4">
+                        <h1 className="h3 fw-bold">
+                            Neural Network Property Checking
+                        </h1>
 
-                    <div className="row g-4 mt-3">
-                        <div className={verificationType === "nncs" ? "col-12 col-lg-4" : "col-12 col-lg-6"}>
-                            <UploadCard
-                                title="Neural Network"
-                                formatLabel="Format"
-                                formatValue={networkFormat}
-                                formatOptions={["ONNX", "SHERLOCK", "NNET"]}
-                                onFormatChange={setNetworkFormat}
-                                fileLabel="Model file"
-                                file={networkFile}
-                                onFileChange={setNetworkFile}
-                                acceptedFileTypes=".onnx,.nnet,.sherlock"
-                                primaryButtonText="View Network"
-                                secondaryButtonText="Validate Network"
-                            />
-                        </div>
+                        <p className="fs-5">
+                            Provide the model and property file to continue.
+                        </p>
 
-                        <div className={verificationType === "nncs" ? "col-12 col-lg-4" : "col-12 col-lg-6"}>
-                            <UploadCard
-                                title="Property Specification"
-                                formatLabel="Specification type"
-                                formatValue={propertyType}
-                                formatOptions={["VNNLIB"]}
-                                onFormatChange={setPropertyType}
-                                fileLabel="Property file"
-                                file={propertyFile}
-                                onFileChange={setPropertyFile}
-                                acceptedFileTypes=".vnnlib"
-                                primaryButtonText="View Property"
-                                secondaryButtonText="Validate Property"
-                            />
-                        </div>
-
-                        {verificationType === "nncs" && (
-                            <div className="col-12 col-lg-4">
+                        <div className="row g-4 mt-3">
+                            <div className={verificationType === "nncs" ? "col-12 col-lg-4" : "col-12 col-lg-6"}>
                                 <UploadCard
-                                    title="Dynamics File"
+                                    title="Neural Network"
                                     formatLabel="Format"
-                                    formatValue="INI"
-                                    formatOptions={["INI"]}
-                                    onFormatChange={() => {}}
-                                    fileLabel="Dynamics file"
-                                    file={dynamicsFile}
-                                    onFileChange={setDynamicsFile}
-                                    acceptedFileTypes=".ini"
-                                    primaryButtonText="View Dynamics"
-                                    secondaryButtonText="Validate Dynamics"
+                                    formatValue={networkFormat}
+                                    formatOptions={["ONNX", "SHERLOCK", "NNET"]}
+                                    onFormatChange={setNetworkFormat}
+                                    fileLabel="Model file"
+                                    file={networkFile}
+                                    onFileChange={setNetworkFile}
+                                    acceptedFileTypes=".onnx,.nnet,.sherlock,.isherlock"
+                                    primaryButtonText="View Network"
+                                    secondaryButtonText="Validate Network"
                                 />
                             </div>
-                        )}
-                    </div>
 
-                    <hr className="section-divider" />
+                            <div className={verificationType === "nncs" ? "col-12 col-lg-4" : "col-12 col-lg-6"}>
+                                <UploadCard
+                                    title="Property Specification"
+                                    formatLabel="Specification type"
+                                    formatValue={propertyType}
+                                    formatOptions={["VNNLIB"]}
+                                    onFormatChange={setPropertyType}
+                                    fileLabel="Property file"
+                                    file={propertyFile}
+                                    onFileChange={setPropertyFile}
+                                    acceptedFileTypes=".vnnlib"
+                                    primaryButtonText="View Property"
+                                    secondaryButtonText="Validate Property"
+                                />
+                            </div>
 
-                    <div className="bottom-panel d-flex justify-content-between">
-                        <button
-                            onClick={() => setCurrentStep(1)}
-                            className="btn btn-primary px-4"
-                        >
-                            Previous Page
-                        </button>
+                            {verificationType === "nncs" && (
+                                <div className="col-12 col-lg-4">
+                                    <UploadCard
+                                        title="Dynamics File"
+                                        formatLabel="Format"
+                                        formatValue="INI"
+                                        formatOptions={["INI"]}
+                                        onFormatChange={() => {}}
+                                        fileLabel="Dynamics file"
+                                        file={dynamicsFile}
+                                        onFileChange={setDynamicsFile}
+                                        acceptedFileTypes=".ini"
+                                        primaryButtonText="View Dynamics"
+                                        secondaryButtonText="Validate Dynamics"
+                                    />
+                                </div>
+                            )}
+                        </div>
 
-                        <button
-                            onClick={() => setCurrentStep(3)}
-                            className="btn btn-primary px-4"
-                        >
-                            Continue to Settings
-                        </button>
-                    </div>
-                </section>
-            )}
+                        <hr className="section-divider" />
 
-            {currentStep === 3 && (
-                <section className="container py-4">
-                    <SettingsSection
-                        settings={settings}
-                        setSettings={setSettings}
-                    />
+                        <div className="bottom-panel d-flex justify-content-between">
+                            <button
+                                onClick={() => setCurrentStep(1)}
+                                className="btn btn-primary px-4"
+                            >
+                                Previous Page
+                            </button>
 
-                    <hr className="section-divider" />
+                            <button
+                                onClick={() => setCurrentStep(3)}
+                                className="btn btn-primary px-4"
+                            >
+                                Continue to Settings
+                            </button>
+                        </div>
+                    </section>
+                )}
 
-                    <div className="bottom-panel d-flex justify-content-between">
-                        <button
-                            onClick={() => setCurrentStep(2)}
-                            className="btn btn-primary px-4"
-                        >
-                            Previous Page
-                        </button>
+                {isAverinnType && currentStep === 3 && (
+                    <section className="container py-4">
+                        <SettingsSection
+                            settings={settings}
+                            setSettings={setSettings}
+                        />
 
-                        <button
-                            onClick={callAPI}
-                            className="btn btn-primary px-4"
-                        >
-                            Start Verification
-                        </button>
-                    </div>
-                </section>
-            )}
+                        <hr className="section-divider" />
 
-            {currentStep === 4 && (
-                <section className="container py-4">
-                    <h1 className="h3 fw-bold text-center">
-                        Analysis Results
-                    </h1>
+                        <div className="bottom-panel d-flex justify-content-between">
+                            <button
+                                onClick={() => setCurrentStep(2)}
+                                className="btn btn-primary px-4"
+                            >
+                                Previous Page
+                            </button>
 
-                    <ResultsPanel backendStatus={backendStatus} />
+                            <button
+                                onClick={callAPI}
+                                disabled={isVerifying}
+                                className="btn btn-primary px-4"
+                            >
+                                {isVerifying ? "Running Verification..." : "Start Verification"}
+                            </button>
+                        </div>
+                    </section>
+                )}
 
-                    <hr className="section-divider" />
+                {isAverinnType && currentStep === 4 && (
+                    <section className="container py-4">
+                        <h1 className="h3 fw-bold text-center">
+                            Analysis Results
+                        </h1>
 
-                    <div className="bottom-panel d-flex justify-content-start">
-                        <button
-                            onClick={() => setCurrentStep(3)}
-                            className="btn btn-primary px-4"
-                        >
-                            Previous Page
-                        </button>
-                    </div>
-                </section>
-            )}
-        </div>
+                        <ResultsPanel backendStatus={backendStatus} />
+
+                        <hr className="section-divider" />
+
+                        <div className="bottom-panel d-flex justify-content-start">
+                            <button
+                                onClick={() => setCurrentStep(3)}
+                                className="btn btn-primary px-4"
+                            >
+                                Previous Page
+                            </button>
+                        </div>
+                    </section>
+                )}
+            </div>
+        </slContext.Provider>
     );
 }
 
 export default App;
-

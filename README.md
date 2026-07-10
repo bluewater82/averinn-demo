@@ -103,6 +103,48 @@ uvicorn main:app --reload
 
 ### 3. Set up the React frontend
 
+Open a second terminal and navigate to the frontend directory:
+
+```
+cd frontend
+```
+
+Install the Node dependencies:
+
+```
+npm install
+```
+
+Start the Vite development server:
+
+```
+npm run dev
+```
+
+The frontend should now be running locally. Vite will print the local address in the terminal. Copy that address into your browser to use the interface.
+
+### 4. Development notes
+
+The backend and frontend need to run at the same time in separate terminals.
+
+The node_modules/ folder is intentionally omitted from the repo. It will be recreated locally with
+
+```
+npm install
+```
+
+The Python virtual environment is also not included in the repo. It will be recreated locally with
+
+```
+python3 -m venv .venv
+```
+
+### 5. Using the interface
+
+- Select verification type
+  - Note: only dynamic and non-dynamic verifications are active, more modes are being implemented
+- Upload your desired network file and specifications sheet (and dynamics file, if applicable) before advancing
+
 ## Future Development
 
 Planned future improvements include:
