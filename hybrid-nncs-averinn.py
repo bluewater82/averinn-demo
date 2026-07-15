@@ -17,6 +17,7 @@ from src.set.setuts import SetUTS
 import configparser
 import json
 import time
+import numpy as np
 
 stime = time.time()
 
@@ -60,20 +61,30 @@ def extract_hybrid_system(hybrid_sys_conf):
     return hybrid_systems, sysDim, inputDim
 
 if __name__ == '__main__':
+
+    if len(sys.argv) != 5:
+        print(
+            "Usage: hybrid-nncs-averinn.py "
+            "<config.ini> <hybrid.yaml> "
+            "<network.onnx> <property.vnnlib>"
+        )
+        sys.exit(1)
+
+    config_path = sys.argv[1]
+    hybrid_path = sys.argv[2]
+    network_path = sys.argv[3]
+    specpath = sys.argv[4]
+
     inifile = configparser.ConfigParser()
-    inifile.read("hybrid-nncs-config.ini", 'UTF-8')
-    FILE_PATH = "./resources/hybrid-nncs-benchmarks/acc/acc_2region_onedelay.yaml"
-    hybrid_sys_conf = load_hybrid_system(FILE_PATH)
+    inifile.read(
+        config_path,
+        encoding="utf-8"
+    )
 
-    # 2. Load Reach Settings
-    reach_set = load_controller_settings(FILE_PATH)
+    hybrid_sys_conf = load_hybrid_system(
+        hybrid_path
+    )
 
-    # 3. Create NN Parser
-    # Assuming format is ONNX based on your YAML key
-    nn_parser = create_network_parser("ONNX", reach_set['onnx_path'])
-    reach_set = load_controller_settings(FILE_PATH)
-
-    specpath: str = json.loads(inifile.get('settings', 'specpath'))
     lastReluC: str = json.loads(inifile.get('settings', 'lastRelu'))
     K: int = json.loads(inifile.get('settings', 'K'))
 
@@ -84,7 +95,7 @@ if __name__ == '__main__':
     lastRelu = LastRelu.YES
     if lastReluC == "NO":
         lastRelu = LastRelu.NO
-    objParser = ONNX(nn_parser["path"])
+    objParser = ONNX(network_path)
 
     objGNNUse: GNN = None
     objGNN = objParser.getNetwork()
@@ -102,14 +113,43 @@ if __name__ == '__main__':
     # 5.Read input and output specification
     objStateSet, outputConstr = read_spec_input_output(objGNNUse, specpath, state_num, listA, listB)
 
-    hybrid_k_step_reach(K, objGNNUse, hybrid_sys_conf, objStateSet,  hybrid_systems, solverType, lastRelu, outputConstr, m, b )
     stime = time.time()
 
-    Log.message("Reach Set \n")
-    rangeSet = objStateSet.getRange()
-    Log.message("       Lower: " + str(rangeSet[0]) + "\n")
-    Log.message("       Upper: " + str(rangeSet[1]) + "\n")
-    Log.message("Safety Checking \n")
+    results = hybrid_k_step_reach(
+        K,
+        objGNNUse,
+        hybrid_sys_conf,
+        objStateSet,
+        hybrid_systems,
+        solverType,
+        lastRelu,
+        outputConstr,
+        m,
+        b,
+        csv_output_path="data.csv"
+    )
 
     etime = time.time()
-    print(etime - stime)
+
+    final_lower = results["lower_bounds"][-1]
+    final_upper = results["upper_bounds"][-1]
+
+    Log.message("Reach Set \n")
+    Log.message("       Lower: " + str(final_lower) + "\n")
+    Log.message("       Upper: " + str(final_upper) + "\n")
+    Log.message("Safety Checking \n")
+    Log.message(
+        "Safety Status: "
+        + results["safety_status"]
+        + "\n"
+    )
+
+    print(
+        f"Generated {results['csv_path']} "
+        f"with {len(results['lower_bounds'])} reachable sets."
+    )
+
+    print(
+        f"Total execution time: "
+        f"{etime - stime:.2f} seconds"
+    )

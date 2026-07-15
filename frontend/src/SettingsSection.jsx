@@ -4,37 +4,56 @@ import SelectedInputsCard from "./SelectedInputsCard";
 
 /*************************************************************************
  * SettingsSection.jsx
- * 
+ *
  * Bundles the ProblemMethod, Abstraction, and SelectedInputs cards
  * into one component.
- * 
+ *
  *************************************************************************/
 
-function SettingsSection({settings, setSettings}) {
+function SettingsSection({
+    settings,
+    setSettings,
+    verificationType,
+    networkFile,
+    propertyType,
+    propertyFile,
+    dynamicsFile
+}) {
     return (
         <section className="container py-4">
-            <h1 className="h3 fw-bold">Neural Network Property Checking</h1>
+            <h1 className="h3 fw-bold">
+                Neural Network Property Checking
+            </h1>
+
             <p className="fs-5">
-                Configure the analysis options for the selected model and property.
+                Configure the analysis options for the selected model
+                and property.
             </p>
 
             <div className="row g-4 mt-3">
                 <div className="col-12 col-lg-4">
-                    <ProblemMethodCard 
-                    settings={settings}
-                    setSettings={setSettings}
+                    <ProblemMethodCard
+                        settings={settings}
+                        setSettings={setSettings}
                     />
                 </div>
 
                 <div className="col-12 col-lg-4">
-                    <AbstractionCard 
-                    settings={settings}
-                    setSettings={setSettings}
+                    <AbstractionCard
+                        settings={settings}
+                        setSettings={setSettings}
                     />
                 </div>
 
                 <div className="col-12 col-lg-4">
-                    <SelectedInputsCard />
+                    <SelectedInputsCard
+                        verificationType={verificationType}
+                        networkFormat={settings.nnFormat}
+                        networkFile={networkFile}
+                        propertyType={propertyType}
+                        propertyFile={propertyFile}
+                        dynamicsFile={dynamicsFile}
+                    />
                 </div>
             </div>
         </section>

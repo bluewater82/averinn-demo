@@ -29,8 +29,8 @@ function AbstractionCard({settings, setSettings}) {
                         })
                     }
                 >
-                    <option>No</option>
-                    <option>Yes</option>
+                    <option value="NO">No</option>
+                    <option value="YES">Yes</option>
                 </select>
             </div>
 

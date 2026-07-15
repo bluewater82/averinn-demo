@@ -1,5 +1,15 @@
 import "./UploadCard.css";
 
+/**
+ * Reusable upload card used throughout the verification setup workflow.
+ *
+ * Rather than creating separate components for each upload step,
+ * this component is configured entirely through props (title,
+ * labels, dropdown options, accepted file types, etc.). This
+ * allows the same UI structure to support multiple upload stages
+ * while keeping all upload behavior consistent.
+ */
+
 function UploadCard({
     title,
     formatLabel,
@@ -13,6 +23,15 @@ function UploadCard({
     primaryButtonText,
     secondaryButtonText
 }) {
+
+    /**
+     * Called whenever the user selects a file from the browser.
+     *
+     * The browser provides all selected files in e.target.files.
+     * Since this interface only accepts a single file, we retrieve
+     * the first entry and pass it back to the parent component,
+     * which stores the file in application state.
+     */
     function handleFileInput(e) {
         const selectedFile = e.target.files[0];
 
@@ -67,9 +86,7 @@ function UploadCard({
                     {primaryButtonText}
                 </button>
 
-                <button className="btn btn-outline-primary">
-                    {secondaryButtonText}
-                </button>
+                
             </div>
         </div>
     );

@@ -29,8 +29,8 @@ function ProblemMethodCard({settings, setSettings}) {
                         })
                     }
                 >
-                    <option>SAFETY</option>
-                    <option>REACHABILITY</option>
+                    <option value="SAFETY">Safety</option>
+                    <option value="REACH">Reachability</option>
                 </select>
             </div>
 
@@ -46,8 +46,8 @@ function ProblemMethodCard({settings, setSettings}) {
                         })
                     }
                 >
-                    <option>Propagation</option>
-                    <option>MILP</option>
+                    <option value="PROPAGATION">Propagation</option>
+                    <option value="MILP">MILP</option>
                 </select>
             </div>
 
@@ -80,8 +80,8 @@ function ProblemMethodCard({settings, setSettings}) {
                         })
                     }
                 >
-                    <option>No</option>
-                    <option>Yes</option>
+                    <option value="NO">No</option>
+                    <option value="YES">Yes</option>
                 </select>
             </div>
 

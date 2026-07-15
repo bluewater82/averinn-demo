@@ -1,4 +1,14 @@
-
+/**
+ * NavButtonPanel.jsx
+ * 
+ * Navigation controls displayed at the bottom of each setup page.
+ *
+ * Responsibilities:
+ * - Move the user backward and forward through the setup workflow.
+ * - Disable the Previous button on the first page.
+ * - Replace the normal "Continue" button with
+ *   "Start Verification" on the final setup page.
+ */
 
 function NavButtonPanel({ currentStep, setCurrentStep, onStartVerification }) {
     function goPrevious() {

@@ -3,9 +3,20 @@ import "./IntervalOverview.css";
 /*****************************************************************************
  * IntervalOverview.jsx
  *
- * Displays all state-variable interval histories on a common scale.
+ * Displays each state-variable interval history on its own local scale.
+ * Each variable receives 15% horizontal padding beyond its minimum and
+ * maximum bounds so its interval evolution remains easy to inspect.
  *****************************************************************************/
 
+
+/** 
+ * Renders the complete reachable set overview
+ * 
+ * Props:
+ * - variables: array of state variables and their interval histories for each step
+ * - selectedVariable: Name of the variable currently selected by user
+ * - onSelectVariable: callback used to update selected variable
+*/
 function IntervalOverview({
     variables,
     selectedVariable,
@@ -15,21 +26,9 @@ function IntervalOverview({
         return null;
     }
 
-    const allBounds = variables.flatMap((variable) =>
-        variable.history.flatMap((interval) => [
-            interval.low,
-            interval.high
-        ])
-    );
-
-    const globalMinimum = Math.min(...allBounds);
-    const globalMaximum = Math.max(...allBounds);
-    const scaleRange =
-        globalMaximum - globalMinimum || 1;
-
-    const setLegend =
-        variables[0]?.history ?? [];
-
+    /*
+    * Layout for results section
+    */
     return (
         <section className="interval-overview">
             <div className="interval-overview-header">
@@ -45,22 +44,13 @@ function IntervalOverview({
                         intermediate, and final reachable bounds.
                     </p>
                 </div>
-
-                {/*<SetLegend intervals={setLegend} />*/}
             </div>
-
-            {/*<div className="interval-scale-labels">
-                <span>{formatNumber(globalMinimum)}</span>
-                <span>{formatNumber(globalMaximum)}</span>
-            </div>*/}
 
             <div className="interval-variable-list">
                 {variables.map((variable) => (
                     <IntervalRow
                         key={variable.name}
                         variable={variable}
-                        globalMinimum={globalMinimum}
-                        scaleRange={scaleRange}
                         isSelected={
                             selectedVariable === variable.name
                         }
@@ -74,14 +64,22 @@ function IntervalOverview({
     );
 }
 
-
+/**
+ * Renders the complete interval history for one state variable
+ * 
+ * The entire row is a button for use to select
+ */
 function IntervalRow({
     variable,
-    globalMinimum,
-    scaleRange,
     isSelected,
     onSelect
 }) {
+    const {
+        localMinimum,
+        localMaximum,
+        scaleRange
+    } = getLocalScale(variable.history);
+
     return (
         <button
             type="button"
@@ -115,13 +113,18 @@ function IntervalRow({
                                 totalSets={
                                     variable.history.length
                                 }
-                                globalMinimum={
-                                    globalMinimum
+                                localMinimum={
+                                    localMinimum
                                 }
                                 scaleRange={scaleRange}
                             />
                         )
                     )}
+                </div>
+
+                <div className="interval-scale-labels">
+                    <span>{formatNumber(localMinimum)}</span>
+                    <span>{formatNumber(localMaximum)}</span>
                 </div>
 
                 <div className="interval-row-values">
@@ -139,17 +142,23 @@ function IntervalRow({
 }
 
 
+/**
+ * Renders each interval per history in a vertical column
+ * 
+ * Non-zero intervals are displayed as horizontal bars spanning the interval range
+ * Zero-width intervals are displayed as a single point
+ */
 function IntervalMark({
     interval,
     position,
     totalSets,
-    globalMinimum,
+    localMinimum,
     scaleRange
 }) {
     const intervalPosition = getIntervalPosition(
         interval.low,
         interval.high,
-        globalMinimum,
+        localMinimum,
         scaleRange
     );
 
@@ -170,6 +179,9 @@ function IntervalMark({
         `[${formatNumber(interval.low)}, ` +
         `${formatNumber(interval.high)}]`;
 
+    /*
+    * If interval width is zero, use interval-point dot style
+    */
     if (Math.abs(interval.width) < Number.EPSILON) {
         return (
             <div
@@ -193,40 +205,19 @@ function IntervalMark({
 }
 
 
-function SetLegend({ intervals }) {
-    return (
-        <div className="interval-overview-legend">
-            {intervals.map((interval, position) => (
-                <div
-                    className="interval-legend-item"
-                    key={interval.set_index}
-                >
-                    <span
-                        className="interval-legend-swatch"
-                        style={{
-                            backgroundColor: getSetColor(
-                                position,
-                                intervals.length
-                            )
-                        }}
-                    />
-
-                    <span>{interval.short_label}</span>
-                </div>
-            ))}
-        </div>
-    );
-}
-
-
+/** 
+ * Converts an interval's bounds into horizontal percentages
+ * 
+ * The local percentages are measured from 0-100%.
+ */
 function getIntervalPosition(
     low,
     high,
-    globalMinimum,
+    localMinimum,
     scaleRange
 ) {
     const left =
-        ((low - globalMinimum) / scaleRange) * 100;
+        ((low - localMinimum) / scaleRange) * 100;
 
     const width =
         ((high - low) / scaleRange) * 100;
@@ -238,6 +229,52 @@ function getIntervalPosition(
 }
 
 
+/**
+ * Calculates one variable's local horizontal scale.
+ *
+ * The scale extends 15% of the observed range beyond both the minimum and
+ * maximum. Constant variables receive a small fallback range so their point
+ * is still centered and visible.
+ */
+function getLocalScale(history) {
+    const bounds = history.flatMap((interval) => [
+        Number(interval.low),
+        Number(interval.high)
+    ]).filter(Number.isFinite);
+
+    if (bounds.length === 0) {
+        return {
+            localMinimum: -1,
+            localMaximum: 1,
+            scaleRange: 2
+        };
+    }
+
+    const observedMinimum = Math.min(...bounds);
+    const observedMaximum = Math.max(...bounds);
+    const observedRange = observedMaximum - observedMinimum;
+
+    const padding = observedRange > 0
+        ? observedRange * 0.15
+        : Math.max(Math.abs(observedMinimum) * 0.20, 0.20);
+
+    const localMinimum = observedMinimum - padding;
+    const localMaximum = observedMaximum + padding;
+
+    return {
+        localMinimum,
+        localMaximum,
+        scaleRange: localMaximum - localMinimum
+    };
+}
+
+
+/**
+ * Calculates the vertical percentage for one history set.
+ * 
+ * Sets are distributed evenly with an 18% padding above and below
+ * consecutive sets
+ */
 function getVerticalPosition(position, totalSets) {
     if (totalSets <= 1) {
         return 50;
@@ -254,6 +291,12 @@ function getVerticalPosition(position, totalSets) {
 }
 
 
+/**
+ * Control the blue bar used for the interval history
+ * 
+ * Earlier sets are more muted and then saturation increases
+ * for each consecutive step throughout the variable's histories.
+ */
 function getSetColor(position, totalSets) {
     if (totalSets <= 1) {
         return "hsl(216 70% 45%)";
@@ -275,7 +318,9 @@ function getSetColor(position, totalSets) {
     )`;
 }
 
-
+/**
+ * Restricts values to the provided min/max limits
+ */
 function clamp(value, minimum, maximum) {
     return Math.min(
         Math.max(value, minimum),
@@ -284,6 +329,7 @@ function clamp(value, minimum, maximum) {
 }
 
 
+/** */
 function formatNumber(value) {
     const numericValue = Number(value);
 

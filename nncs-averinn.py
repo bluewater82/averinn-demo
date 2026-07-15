@@ -36,6 +36,8 @@ import time
 from src.utilities.spec import Spec
 from src.utilities.vnnlib import VNNLib
 
+
+
 #########################################
 ### Dictionaries for Time and Result #####
 #########################################
@@ -191,6 +193,8 @@ objStateSet = Spec.getInput(ioSpec)
 dictForDataFrame[str(0)+"Low"] = np.insert(objStateSet.getArrayLow(), objStateSet.getDimension(), 0)
 dictForDataFrame[str(0)+"High"] = np.insert(objStateSet.getArrayHigh(), objStateSet.getDimension(), 0)
 outputConstr = Spec.getOutput(ioSpec)
+
+
 #outputConstr = (np.array(listA, dtype=np.float64), np.array(listB, dtype=np.float64))
 Log.message("Specification\n")
 Log.message("       Input Set\n")

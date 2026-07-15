@@ -11,6 +11,8 @@ from src.utilities.log import Log
 from typing import List, Dict, Tuple
 
 import numpy as np
+import time
+from src.utilities.reachcsv import write_reachability_csv
 
 np.set_printoptions(suppress=True, precision=4)
 
@@ -145,17 +147,43 @@ def compute_nn_output_box(state_box, obj_gnn, output_constr, solverType, lastRel
     # objTechnique = SetPropagation(objGNNUse, objStateSet, outputConstr, solverType, lastRelu)
     return objInputSet
 
-def hybrid_k_step_reach(K, objGNN, hs_cong, objStateSet,  hybrid_systems, solverType, lastRelu, outputConstr, TranM, TranB):
+def hybrid_k_step_reach(K, objGNN, hs_cong, objStateSet,  hybrid_systems, solverType, lastRelu, outputConstr, TranM, TranB, csv_output_path="data.csv"):
     Q = len(hybrid_systems)
     lower_bounds_list = []
     upper_bounds_list = []
+
+    #
+    # 
+    # Adds elapsed times 
+    elapsed_times = []
+
     X_k = objStateSet
     print("X_k start regions (initial regions):")
     rangeSet = X_k.getRange()
+
+    #
+    # 
+    # Stores initial set
+    lower_bounds_list.append(
+        np.asarray(rangeSet[0]).reshape(-1).copy()
+    )
+
+    upper_bounds_list.append(
+        np.asarray(rangeSet[1]).reshape(-1).copy()
+    )
+
+    elapsed_times.append(0.0)
+
     print("Lower: " + str(rangeSet[0]) )
     print("Upper: " + str(rangeSet[1]) )
     print("--------------------------------------------" + "\n")
     for i in range(K):
+
+        #
+        #
+        # Adds timing results for each step
+        step_start_time = time.time()
+
         print("\tIter K = " + str(i) + "\n")
         S = []
         objInputSet = None
@@ -201,8 +229,21 @@ def hybrid_k_step_reach(K, objGNN, hs_cong, objStateSet,  hybrid_systems, solver
             print("\tX_k+1 is:")
             print("\tX_k+1 Lower: " + str(rangeSet[0]))
             print("\tX_k+1 Upper: " + str(rangeSet[1]) + "\n")
-            lower_bounds_list.append(rangeSet[0])
-            upper_bounds_list.append(rangeSet[1])
+            
+            #
+            # 
+            # Stores bounds into one-dimensional arrays along with runtimes for each step
+            lower_bounds_list.append(
+                np.asarray(rangeSet[0]).reshape(-1).copy()
+            )
+
+            upper_bounds_list.append(
+                np.asarray(rangeSet[1]).reshape(-1).copy()
+            )
+
+            elapsed_times.append(
+                time.time() - step_start_time
+            )
     # if S_k is None:
     #     Log.message("Reach is un Safe")
     #     print("\tS_k is null so reach Set Safe")
@@ -216,14 +257,37 @@ def hybrid_k_step_reach(K, objGNN, hs_cong, objStateSet,  hybrid_systems, solver
     print("Upper: " + str(rangeSet[1]) + "\n")
     isIntersect: bool = SetUTS.intersectWithUnsafe(X_k, outputConstr, solverType, 'X')
 
+    #
+    # 
+    # Added SAFE/UNSAFE to output
     if isIntersect:
+        safety_status = "Unsafe"
         print("Safety Status: Unsafe \n")
         Log.message("Safety Status: Unsafe \n")
     else:
+        safety_status = "Safe"
         print("Safety Status: Safe \n")
         Log.message("Safety Status: Safe \n")
 
     save_bounds_data(lower_bounds_list, upper_bounds_list)
+
+    #
+    # 
+    # CSV write to disk with saved lists and returns results
+    csv_path = write_reachability_csv(
+        lower_bounds=lower_bounds_list,
+        upper_bounds=upper_bounds_list,
+        elapsed_times=elapsed_times,
+        output_path=csv_output_path
+    )
+
+    return {
+        "lower_bounds": lower_bounds_list,
+        "upper_bounds": upper_bounds_list,
+        "elapsed_times": elapsed_times,
+        "safety_status": safety_status,
+        "csv_path": str(csv_path)
+    }
 
 # if __name__ == '__main__':
 #     reachability(K)

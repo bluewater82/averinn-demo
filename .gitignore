@@ -62,6 +62,7 @@ nn-config-temp.ini
 
 uploaded_inputs/
 acas_results/
+outputs/
 
 ####################################################
 # Coverage / testing
