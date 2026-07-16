@@ -613,23 +613,16 @@ def summarize_csv(
 def build_verification_response(
     completed: subprocess.CompletedProcess[str],
     includes_initial_set: bool,
+    output_dir: Path,
 ) -> dict[str, Any]:
     """
     Normalize the result returned by NN, NNCS, and Hybrid verification.
     """
 
-    csv_path = find_generated_artifact(
-        "data.csv"
-    )
-    log_path = find_generated_artifact(
-        "log.txt"
-    )
-    lp_path = find_generated_artifact(
-        "model.lp"
-    )
-    sol_path = find_generated_artifact(
-        "model.sol"
-    )
+    csv_path = output_dir / "data.csv"
+    log_path = output_dir / "log.txt"
+    lp_path = output_dir / "model.lp"
+    sol_path = output_dir / "model.sol"
 
     csv_summary = summarize_csv(
         csv_path,
@@ -889,7 +882,7 @@ async def run_nn_averinn(
                     str(script_path),
                     str(config_path),
                 ],
-                cwd=PROJECT_ROOT,
+                cwd=run_dir,
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -903,6 +896,7 @@ async def run_nn_averinn(
     return build_verification_response(
         completed,
         includes_initial_set=False,
+        output_dir=run_dir,
     )
 
 
@@ -1007,7 +1001,7 @@ async def run_nncs_averinn(
                     str(script_path),
                     str(config_path),
                 ],
-                cwd=PROJECT_ROOT,
+                cwd=run_dir,
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -1021,6 +1015,7 @@ async def run_nncs_averinn(
     return build_verification_response(
         completed,
         includes_initial_set=True,
+        output_dir=run_dir,
     )
 
 
@@ -1135,7 +1130,7 @@ async def run_hybrid_averinn(
                     str(network_path),
                     str(property_path),
                 ],
-                cwd=PROJECT_ROOT,
+                cwd=run_dir,
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -1149,6 +1144,7 @@ async def run_hybrid_averinn(
     return build_verification_response(
         completed,
         includes_initial_set=True,
+        output_dir=run_dir,
     )
 
 
