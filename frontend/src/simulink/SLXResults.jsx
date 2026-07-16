@@ -1,13 +1,16 @@
-import "../index.css"
-import {useEffect, useState} from 'react'
+import { slContext } from "../App";
+import "./index.css"
+import {useContext, useEffect, useState} from 'react'
 function SLXResults({results}){
     const [showGraph, setShowGraph] = useState(true);
     const [plotUrl, setPlotUrl] = useState(null);
     const [loading, setLoading] = useState(true);
+    const {API_BASE_URL} = useContext(slContext)
 
     useEffect(() => {
         // Fetch the image from FastAPI
-        fetch('http://localhost:8000/slxplt')
+        URL.revokeObjectURL(plotUrl)
+        fetch(`${API_BASE_URL}/slxplt`)
         .then((response) => response.blob())
         .then((blob) => {
             // Create an Object URL for the blob
@@ -31,10 +34,13 @@ function SLXResults({results}){
             {plotUrl && <img src={plotUrl} alt="Matplotlib Plot from FastAPI" />}
         </div>}
         {!showGraph && <table id="slxtable">
-            <tr>
-                <th className="slxth">Timestamp</th>
-                <th className="slxth" colSpan={30}>Data</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th className="slxth">Timestamp</th>
+                    <th className="slxth" colSpan={30}>Data</th>
+                </tr>
+            </thead>
+            <tbody>
             {Object.entries(results).map((arr) => 
                 <tr>
                 <td className="slxtd">{arr[0].replace(/[\[\]]/g, "")}</td>
@@ -43,6 +49,7 @@ function SLXResults({results}){
                 ))}
                 </tr>
             )}
+            </tbody>
         </table>}
         </>
     )

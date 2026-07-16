@@ -1,18 +1,29 @@
-import "../index.css"
+import { useContext, useState } from "react";
+import "./index.css"
+import SlUploadCard from "./slUploadCard";
+import { slContext } from "../App";
 
-function UploadSLX({setSInputs, setBInputs, sdocContinueOk}){
-
+function UploadSLX({setSInputs, setBInputs, sdocContinueOk, setFileVerif}){
+    const [nnfile, setnnfile] = useState(null);
+    const [slxfile, setslxfile] = useState(null);
+    const [yamlurl, setyamlurl] = useState(null);
+    const [nnurl, setnnurl] = useState(null);
+    const {API_BASE_URL} = useContext(slContext);
     /* Submit the entered SLX File, check if both files are submitted,
          which allows the user to continue the form */
-    async function handleSLXEvent() {
-        const file = document.getElementById("sfile").files[0];
-        document.getElementById("sfilelabel").innerText = "Input File: " + file.name
-        console.log(file)
-        if(file){
+         
+    async function handleSLXEvent(e) {
+        URL.revokeObjectURL(yamlurl)
+        sdocContinueOk(false)
+        setFileVerif(true)
+        let eventfile = (e.target.files[0])
+        setslxfile(eventfile)
+        if(eventfile){
+            console.log(eventfile)
             console.log("SLX File Read - Sending...")
             const fd = new FormData();
-            fd.append("file", file);
-            const request = await fetch("http://127.0.0.1:8000/slxfile", {method:"POST", body:fd});
+            fd.append("file", eventfile);
+            const request = await fetch(`${API_BASE_URL}/slxfile`, {method:"POST", body:fd});
             const resp = await request.json();
             if(request.ok){
                 console.log(resp.message)
@@ -21,107 +32,127 @@ function UploadSLX({setSInputs, setBInputs, sdocContinueOk}){
                 if(resp.numOut == 0){
                     document.getElementById("noOut").classList.remove("d-none")
                 }
-                const creq = await fetch("http://127.0.0.1:8000/continueok")
+                const creq = await fetch(`${API_BASE_URL}/continueok`)
                 if (creq.ok){
                     const response = await creq.json();
                     sdocContinueOk(response.message)
                 }
             } else{
+                e.target.value = ""
                 document.getElementById(request.status).classList.remove("d-none")
-                document.getElementById("sfile").value = "";
-                document.getElementById("sfilelabel").innerText = "Could Not Read File!"
+                setslxfile(null)
                 
             }
         } 
+        setFileVerif(false)
     }
 
     /* Submit the entered NN file, check if both files are submitted,
          which allows the user to continue the form */
-    async function handleNNfile(){
-        const nnfile = document.getElementById("nfile").files[0];
-        if(nnfile){
-            console.log(nnfile)
-            document.getElementById("nfilelabel").innerText = "Input File: " + nnfile.name 
+    async function handleNNfile(e){
+        URL.revokeObjectURL(nnurl)
+        setFileVerif(true)
+        sdocContinueOk(false)
+        let eventfile = (e.target.files[0])
+        setnnfile(eventfile)
+        if(eventfile){
+            console.log(eventfile)
             const fd = new FormData();
-            fd.append("file", nnfile)
+            fd.append("file", eventfile)
             console.log("NN File Read - Sending...")
-            const req = await fetch("http://127.0.0.1:8000/nnfile", {method:"POST", body:fd})
-            const resp = await req.json();
-            const reqslx = await fetch("http://127.0.0.1:8000/slxnnfile", {method:"POST"})
+            const reqslx = await fetch(`${API_BASE_URL}/nnfile`, {method:"POST", body:fd})
             const respslx = await reqslx.json();
-            if(!req.ok || !reqslx.ok){
-                document.getElementById("nfile").value = "";
-                document.getElementById("nfilelabel").innerText = "Could Not Read File!" 
+            if(!reqslx.ok){
+                e.target.value = ""
+                setnnfile(null)
                 document.getElementById(reqslx.status).classList.remove("d-none")
             }  else {
-                console.log(resp.message)
                 console.log(respslx.message)
                 setSInputs(respslx.numSIn)
                 setBInputs(respslx.numBIn)
                 if(respslx.numOut == 0){
                     document.getElementById("noOut").classList.remove("d-none")
                 }
-                const request = await fetch("http://127.0.0.1:8000/continueok")
+                const request = await fetch(`${API_BASE_URL}/continueok`)
                 if (request.ok){
                     const response = await request.json();
                     sdocContinueOk(response.message)
                 }
             }
         }
+        setFileVerif(false)
     } 
+    async function getYamlFile() {
+        URL.revokeObjectURL(yamlurl)
+        if(slxfile){
+            const request = await fetch(`${API_BASE_URL}/slxyamlconv`)
+            if (request.ok){
+                const file = await request.blob()
+                const url = URL.createObjectURL(file)
+                setyamlurl(url)
+            } else{
+                console.error(request)
+            }
+        }
+    }
 
+    async function getNNPlot(){
+        URL.revokeObjectURL(nnurl);
+        if(nnfile){
+            const request = await fetch(`${API_BASE_URL}/pltnn`)
+            if (request.ok){
+                const file = await request.blob()
+                const url = URL.createObjectURL(file)
+                setyamlurl(url)
+            } else{
+                console.error(await request.json().detail)
+            }
+        }
+    }
     /* html */
     return (
         <div>
-            <div className="text-center mb-5">
-                <h2 className="h2 fw-bold">Simulink Systems</h2>
-                <p className="text-muted">
-                    Upload your Neural Network and Simulink model to begin.
+            <h1 className="h3 fw-bold">
+                    Simulink Systems
+                </h1>
+
+                <p className="fs-5">
+                    Provide the Neural Network, and Neural Network Controlled Dynamics Simulink Files.
                 </p>
-            </div>
 
             <form
                 id="nfileform"
                 className="row justify-content-center g-4 p-2"
                 encType="multipart/form-data">
-                <div className="col-lg-5">
-                    <div className="card shadow-sm upload-card h-100">
-                        <div className="card-body text-center">
-                            <h4 className="mb-3">Neural Network</h4>
-                            <label
-                                htmlFor="nfile"
-                                id="nfilelabel"
-                                className="upload-area mx-5">
-                                <h5>Click to Upload</h5>
-                                <p className="text-muted mb-0">
-                                    .onnx or .txt</p>
-                            </label>
-                            <input
-                                id="nfile"
-                                type="file"
-                                accept=".txt,.onnx"
-                                onChange={handleNNfile}/>
-                        </div>
+                <div className="row g-4 mt-3">
+                    <div className={"col-12 col-lg-6"}>
+                        <SlUploadCard
+                            title="Neural Network"
+                            fileLabel="Model file"
+                            file={nnfile}
+                            onFileChange={handleNNfile}
+                            acceptedFileTypes=".onnx,.nnet,.sherlock,.isherlock,.txt"
+                            primaryButtonText="View Network"
+                            primaryAction={getNNPlot}
+                            secondaryButtonText="Download Network img"
+                            secondaryHref={nnurl}
+                            showSecondary={!!nnurl}
+                        />
                     </div>
-                </div>
-                <div className="col-lg-5">
-                    <div className="card shadow-sm upload-card h-100">
-                        <div className="card-body text-center">
-                            <h4 className="mb-3">Simulink Model</h4>
-                            <label
-                                htmlFor="sfile"
-                                id="sfilelabel"
-                                className="upload-area mx-5">
-                                <h5>Click to Upload</h5>
-                                <p className="text-muted mb-0">
-                                    .slx</p>
-                            </label>
-                            <input
-                                id="sfile"
-                                type="file"
-                                accept=".slx"
-                                onChange={handleSLXEvent}/>
-                        </div>
+
+                    <div className={"col-12 col-lg-6"}>
+                        <SlUploadCard
+                            title="Simulink File"
+                            fileLabel="Simulink file"
+                            file={slxfile}
+                            onFileChange={handleSLXEvent}
+                            acceptedFileTypes=".slx"
+                            primaryButtonText="Convert to YAML"
+                            primaryAction={getYamlFile}
+                            secondaryButtonText="Download YAML"
+                            secondaryHref={yamlurl}
+                            showSecondary={!!yamlurl}
+                        />
                     </div>
                 </div>
             </form>

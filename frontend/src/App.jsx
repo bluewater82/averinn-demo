@@ -105,7 +105,8 @@ function App() {
         currentStep,
         setCurrentStep,
         currentType: verificationType,
-        setCurrentType: setVerificationType
+        setCurrentType: setVerificationType,
+        API_BASE_URL
     };
 
     // State trackers for file previews
@@ -356,7 +357,7 @@ function App() {
         // Makes the current workflow step and verification type
         // available to descendant components that use slContext.
         <slContext.Provider value={contextData}>
-            <div className="background">
+            <div className="background d-flex flex-column" style={{minHeight:"100svh"}}>
 
                 {/* ============================================================
                     Shared Page Header

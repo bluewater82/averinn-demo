@@ -5,6 +5,8 @@ import LinearUp from "./assets/icons/avlin.png";
 import NonLinear from "./assets/icons/avnlin.png";
 import SimLink from "./assets/icons/avssimg.png";
 import "./VerifTypePanel.css";
+import { useContext } from "react";
+import { slContext } from "./App";
 
 /****************************************************************
  * VerifTypePanel.jsx
@@ -14,6 +16,7 @@ import "./VerifTypePanel.css";
  ****************************************************************/
 
 function VerifTypePanel({ onSelectType }) {
+    const {API_BASE_URL} = useContext(slContext)
     return (
         <section className="container my-5">
             <div className="verification-grid">
@@ -86,8 +89,10 @@ function VerifTypePanel({ onSelectType }) {
                 <div className="col-md-4">
                     <button
                         className="verif-type-card"
-                        onClick={() =>
-                            onSelectType("simulink-system")
+                        onClick={() => {
+                            onSelectType("simulink-system");
+                            fetch(`${API_BASE_URL}/reset`)
+                        }
                         }
                     >
                         <img

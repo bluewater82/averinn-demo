@@ -1,15 +1,15 @@
-import "../index.css"
+import "./index.css"
 import "../index1.css"
 import { slContext } from "../App.jsx"
 import { useContext } from "react";
 
-function InputSLXParams({sInputs, bInputs, setResults}){
-    const {currentStep, setCurrentStep} = useContext(slContext)
+function InputSLXParams({sInputs, bInputs, setResults, setRunning}){
+    const {currentStep, setCurrentStep, API_BASE_URL} = useContext(slContext)
     /* Parse the options form, send data to the backend. The first params can be sent as-is, 
     the initial State Vector is sent as a list*/
     async function handleOptEvent(event){
         event.preventDefault();
-        document.getElementById("submitFormButton").setAttribute("disabled", true)
+        setRunning(true)
         // Set up formdata
         const form = document.getElementById('optsform')
         const fd = new FormData(form)
@@ -22,10 +22,9 @@ function InputSLXParams({sInputs, bInputs, setResults}){
         //send http request
         const jsondata = JSON.stringify(formsubmit)
         console.log(jsondata)
-        const request = await fetch("http://127.0.0.1:8000/slxfileOpts", 
+        const request = await fetch(`${API_BASE_URL}/slxfileOpts`, 
             {method:"POST", headers:{"Content-type": "application/json"}, body:jsondata});
         //handle request
-        document.getElementById("submitFormButton").setAttribute("disabled", false)
         if(request.ok){
             const resp = await request.json();
             setResults(resp)
@@ -33,6 +32,7 @@ function InputSLXParams({sInputs, bInputs, setResults}){
         } else{
             window.alert("Please Enter Values")
         }
+        setRunning(false)
     }
 
 

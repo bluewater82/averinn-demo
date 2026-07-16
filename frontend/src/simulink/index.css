@@ -1,0 +1,45 @@
+
+
+
+
+.albutton{
+  background:none;
+  border: none;
+  color: gray;
+}
+
+.aclass{
+  display: flex;
+  align-items: start;
+  text-align: start;
+  justify-content: space-between;
+  margin: 20px;
+  margin-bottom: 0px !important;
+}
+#slxtable{
+  width: 100%;
+  margin: auto;
+  border: 1px solid black;
+  border-radius: 10px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+}
+
+.slxth, .slxtd {
+  border-right: 1px solid black;
+}
+
+.slxth {
+  border-bottom: 1px solid black;
+}
+
+tr:nth-child(even){
+  background-color: aliceblue;
+}
+
+img {
+  width: 50%;
+  height: auto;
+  align-self: center;
+}
