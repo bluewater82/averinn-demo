@@ -1,5 +1,4 @@
 import "./index.css"
-import "../index1.css"
 import { slContext } from "../App.jsx"
 import { useContext } from "react";
 

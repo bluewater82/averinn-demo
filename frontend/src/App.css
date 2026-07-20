@@ -5,41 +5,6 @@
    Component-specific styles remain in their corresponding CSS files.
    ========================================================================== */
 
-.card {
-    background-color: white;
-    color: black;
-    border: 2px solid #d8dce3;
-    border-radius: 16px;
-    padding: 24px;
-    flex: 1;
-    min-width: 280px;
-}
-
-.card h2 {
-    font-size: 18px;
-    margin-bottom: 20px;
-}
-
-.card label {
-    display: block;
-    margin-top: 12px;
-    margin-bottom: 6px;
-}
-
-.card select {
-    background-color: white;
-    color: black;
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #cfd4dc;
-}
-
-.card input {
-    background-color: white;
-    color: black;
-}
-
 .background {
     background-color: white;
 }
@@ -53,52 +18,4 @@
     border: none;
     border-top: 2px solid #d8dce3;
     margin: 4px 0;
-}
-
-.complete-line {
-    background-color: #0057d9;
-}
-
-.results-panel {
-    color: black;
-    padding: 10px;
-}
-
-.results-panel h2 {
-    color: black;
-    font-weight: bolder;
-}
-
-.set-summary-row {
-    display: flex;
-    gap: 24px;
-    margin-top: 16px;
-}
-
-.set-summary-card {
-    flex: 1;
-    border: 1px solid #d8dce3;
-    border-radius: 16px;
-    padding: 16px;
-    background-color: white;
-}
-
-.set-summary-card pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-
-.set-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.set-table td {
-    padding: 6px 8px;
-    border-bottom: 1px solid #d8dce3;
-}
-
-.set-table td:first-child {
-    font-weight: bold;
-    width: 60px;
 }

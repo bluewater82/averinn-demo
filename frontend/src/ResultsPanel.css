@@ -9,26 +9,6 @@
     font-weight: 800;
 }
 
-.set-summary-row {
-    display: flex;
-    gap: 24px;
-    margin-top: 16px;
-}
-
-.set-summary-card {
-    flex: 1;
-    border: 2px solid rgba(128, 128, 128, 0.466);
-    border-radius: 16px;
-    padding: 16px;
-    background-color: white;
-    text-align: left;
-}
-
-.set-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
 .set-table td {
     padding: 6px 8px;
     border-bottom: 1px solid rgba(128, 128, 128, 0.466);
@@ -37,10 +17,6 @@
 .set-table td:first-child {
     font-weight: bold;
     width: 60px;
-}
-
-.set-results-section {
-    margin-top: 16px;
 }
 
 .set-results-section > h2 {
@@ -79,10 +55,4 @@
     font-size: 0.85rem;
     text-align: left;
     white-space: pre-wrap;
-}
-
-@media (max-width: 800px) {
-    .set-summary-row {
-        flex-direction: column;
-    }
 }

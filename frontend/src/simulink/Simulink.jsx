@@ -1,6 +1,5 @@
 import { useState, useContext} from "react"
 import "./index.css"
-import "../index1.css"
 import UploadSLX from "./UploadSLX.jsx";
 import InputSLXParams from "./InputParamsSLX.jsx";
 import SLXResults from "./SLXResults.jsx";

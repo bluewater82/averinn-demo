@@ -168,7 +168,25 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+class NetworkLayerSummary(BaseModel):
+    """Structural and parameter info for one neural network layer."""
 
+    id: int
+    name: str
+    role: str
+    size: int
+    activation: str | None = None
+    weight_shape: list[int] | None = None
+    bias_shape: list[int] | None = None
+    parameter_count: int = 0
+
+class NetworkVisualizationResponse(BaseModel):
+    """Normalized network description consumed by React visualizer."""
+    filename: str
+    network_type: str
+    layer_count: int
+    parameter_count: int
+    layers: list[NetworkLayerSummary]
 # ==========================================================
 # General Helper Functions
 # ==========================================================
@@ -565,6 +583,250 @@ def summarize_csv(
             ),
         },
     }
+
+def get_onnx_attribute(
+    node: Any,
+    attribute_name: str,
+    default: int,
+) -> int:
+    """Return an integer ONNX node attribute or a default value."""
+
+    for attribute in node.attribute:
+        if attribute.name == attribute_name:
+            return int(attribute.i)
+
+    return default
+
+
+def get_onnx_input_size(model: Any) -> int:
+    """Return the feature count for the model's primary input tensor."""
+
+    initializer_names = {
+        initializer.name
+        for initializer in model.graph.initializer
+    }
+
+    network_inputs = [
+        graph_input
+        for graph_input in model.graph.input
+        if graph_input.name not in initializer_names
+    ]
+
+    if not network_inputs:
+        raise ValueError(
+            "The ONNX model does not define a network input."
+        )
+
+    dimensions = [
+        dimension.dim_value
+        for dimension in (
+            network_inputs[0]
+            .type
+            .tensor_type
+            .shape
+            .dim
+        )
+        if dimension.dim_value > 0
+    ]
+
+    if not dimensions:
+        raise ValueError(
+            "The ONNX input does not contain a fixed feature dimension."
+        )
+
+    # Feed-forward models commonly use [batch_size, feature_count].
+    return int(dimensions[-1])
+
+
+def inspect_feedforward_onnx(
+    model: Any,
+    filename: str,
+) -> NetworkVisualizationResponse:
+    """
+    Convert a sequential feed-forward ONNX graph into visualization metadata.
+
+    Supported dense-layer patterns:
+        Gemm
+        MatMul -> Add
+
+    ReLU operations are associated with the most recently discovered
+    dense layer.
+    """
+
+    initializer_map = {
+        initializer.name: numpy_helper.to_array(initializer)
+        for initializer in model.graph.initializer
+    }
+
+    dense_layers: list[dict[str, Any]] = []
+    last_dense_layer: dict[str, Any] | None = None
+
+    for node in model.graph.node:
+        if node.op_type == "Gemm":
+            if len(node.input) < 2:
+                raise ValueError(
+                    "Encountered a Gemm operation without a weight matrix."
+                )
+
+            weight = initializer_map.get(node.input[1])
+
+            if weight is None or weight.ndim != 2:
+                raise ValueError(
+                    "Unable to read a two-dimensional Gemm weight matrix."
+                )
+
+            transposed_weight = get_onnx_attribute(
+                node,
+                "transB",
+                0,
+            )
+
+            if transposed_weight:
+                output_size, input_size = weight.shape
+            else:
+                input_size, output_size = weight.shape
+
+            bias_size = 0
+
+            if len(node.input) >= 3:
+                bias = initializer_map.get(node.input[2])
+
+                if bias is not None:
+                    bias_size = int(bias.size)
+
+            last_dense_layer = {
+                "input_size": int(input_size),
+                "output_size": int(output_size),
+                "weight_shape": [
+                    int(output_size),
+                    int(input_size),
+                ],
+                "bias_size": bias_size,
+                "activation": "Linear",
+            }
+
+            dense_layers.append(last_dense_layer)
+
+        elif node.op_type == "MatMul":
+            if len(node.input) < 2:
+                raise ValueError(
+                    "Encountered a MatMul operation without a weight matrix."
+                )
+
+            weight = initializer_map.get(node.input[1])
+
+            if weight is None or weight.ndim != 2:
+                raise ValueError(
+                    "Unable to read a two-dimensional MatMul weight matrix."
+                )
+
+            # For A × B, B is commonly stored as
+            # [input_neurons, output_neurons].
+            input_size, output_size = weight.shape
+
+            last_dense_layer = {
+                "input_size": int(input_size),
+                "output_size": int(output_size),
+                "weight_shape": [
+                    int(output_size),
+                    int(input_size),
+                ],
+                "bias_size": 0,
+                "activation": "Linear",
+            }
+
+            dense_layers.append(last_dense_layer)
+
+        elif (
+            node.op_type == "Add"
+            and last_dense_layer is not None
+        ):
+            initializer_inputs = [
+                initializer_map[input_name]
+                for input_name in node.input
+                if input_name in initializer_map
+            ]
+
+            if initializer_inputs:
+                bias = initializer_inputs[0]
+                last_dense_layer["bias_size"] = int(bias.size)
+
+        elif (
+            node.op_type == "Relu"
+            and last_dense_layer is not None
+        ):
+            last_dense_layer["activation"] = "ReLU"
+
+    if not dense_layers:
+        raise ValueError(
+            "No supported feed-forward layers were found. "
+            "The prototype currently supports Gemm and MatMul layers."
+        )
+
+    input_size = get_onnx_input_size(model)
+
+    layers = [
+        NetworkLayerSummary(
+            id=0,
+            name="Input Layer",
+            role="input",
+            size=input_size,
+        )
+    ]
+
+    total_dense_layers = len(dense_layers)
+    total_parameters = 0
+
+    for position, dense_layer in enumerate(
+        dense_layers,
+        start=1,
+    ):
+        is_output_layer = position == total_dense_layers
+
+        weight_count = (
+            dense_layer["weight_shape"][0]
+            * dense_layer["weight_shape"][1]
+        )
+
+        parameter_count = (
+            weight_count
+            + dense_layer["bias_size"]
+        )
+
+        total_parameters += parameter_count
+
+        layers.append(
+            NetworkLayerSummary(
+                id=position,
+                name=(
+                    "Output Layer"
+                    if is_output_layer
+                    else f"Hidden Layer {position}"
+                ),
+                role=(
+                    "output"
+                    if is_output_layer
+                    else "hidden"
+                ),
+                size=dense_layer["output_size"],
+                activation=dense_layer["activation"],
+                weight_shape=dense_layer["weight_shape"],
+                bias_shape=(
+                    [dense_layer["bias_size"]]
+                    if dense_layer["bias_size"] > 0
+                    else None
+                ),
+                parameter_count=parameter_count,
+            )
+        )
+
+    return NetworkVisualizationResponse(
+        filename=filename,
+        network_type="feedforward",
+        layer_count=len(layers),
+        parameter_count=total_parameters,
+        layers=layers,
+    )
 
 
 def build_verification_response(
@@ -1510,6 +1772,71 @@ async def run_slx_simulation(
             status_code=457,
             detail="Error simulating SLX file.",
         ) from error
+    
+
+@app.post(
+    "/visualize-network",
+    response_model=NetworkVisualizationResponse,
+)
+async def visualize_network(
+    network_file: UploadFile = File(...),
+):
+    """Inspect an uploaded ONNX network for the visualization interface."""
+
+    if onnx is None or numpy_helper is None:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "ONNX visualization support is unavailable. "
+                "Verify that the onnx package is installed."
+            ),
+        )
+
+    validate_extension(
+        network_file,
+        {".onnx"},
+    )
+
+    temporary_path: Path | None = None
+
+    try:
+        temporary_path = await save_upload_in_chunks(
+            network_file,
+            suffix=".onnx",
+        )
+
+        model = onnx.load(
+            str(temporary_path)
+        )
+
+        onnx.checker.check_model(
+            model
+        )
+
+        return inspect_feedforward_onnx(
+            model,
+            filename=(
+                network_file.filename
+                or "uploaded-network.onnx"
+            ),
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Unable to visualize this ONNX network: "
+                f"{error}"
+            ),
+        ) from error
+
+    finally:
+        remove_file_if_present(
+            temporary_path
+        )
 
 
 @app.get("/slxplt")
