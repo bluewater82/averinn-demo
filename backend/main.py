@@ -21,7 +21,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 from typing import Any
 
 

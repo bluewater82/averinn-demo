@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./NetworkExplorer.css";
 
 /**
@@ -23,6 +23,8 @@ function NetworkExplorer({
         ) ?? network?.layers?.[0] ?? null,
         [network, selectedLayerId]
     );
+
+    const [selectedConnectionID, setSelectedConnectionID] = useState(null);
 
     useEffect(() => {
         if (!isOpen) return undefined;
@@ -136,15 +138,21 @@ function NetworkExplorer({
                                                     }
                                                 />
 
-                                                {index < network.layers.length - 1 && (
-                                                    <div
-                                                        className="network-layer-connector"
-                                                        aria-hidden="true"
-                                                    >
-                                                        <span />
-                                                        <b>›</b>
-                                                    </div>
-                                                )}
+                                            {index < network.layers.length - 1 && (
+                                                <ConnectionButton
+                                                    sourceLayer={layer}
+                                                    destinationLayer={network.layers[index + 1]}
+                                                    isSelected={
+                                                        selectedConnectionId
+                                                        === network.layers[index + 1].id
+                                                    }
+                                                    onSelect={() =>
+                                                        setSelectedConnectionId(
+                                                            network.layers[index + 1].id
+                                                        )
+                                                    }
+                                                />
+                                            )}    
                                             </div>
                                         ))}
                                     </div>
@@ -197,6 +205,51 @@ function LayerCard({ layer, isSelected, onSelect }) {
             </span>
             <span className="network-activation-badge">
                 {layer.activation ?? "Input"}
+            </span>
+        </button>
+    );
+}
+
+function ConnectionButton({
+    sourceLayer,
+    destinationLayer,
+    isSelected,
+    onSelect
+}) {
+    const shape = destinationLayer.weight_shape;
+
+    return (
+        <button
+            type="button"
+            className={
+                "network-layer-connector " +
+                (
+                    isSelected
+                        ? "network-layer-connector--selected"
+                        : ""
+                )
+            }
+            onClick={onSelect}
+            aria-pressed={isSelected}
+            aria-label={
+                `Inspect weights from ${sourceLayer.name} ` +
+                `to ${destinationLayer.name}`
+            }
+        >
+            <span className="network-connector-shape">
+                {formatShape(shape)}
+            </span>
+
+            <span
+                className="network-connector-arrow"
+                aria-hidden="true"
+            >
+                <i />
+                <b>›</b>
+            </span>
+
+            <span className="network-connector-action">
+                Inspect
             </span>
         </button>
     );

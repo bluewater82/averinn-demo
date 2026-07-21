@@ -265,22 +265,77 @@
 }
 
 .network-layer-connector {
-    width: 54px;
+    width: 76px;
+    min-height: 90px;
+    padding: 8px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #607d9e;
+    background: transparent;
+    cursor: pointer;
+    transition:
+        color 160ms ease,
+        background 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+}
+
+.network-layer-connector:hover {
+    color: #145b9e;
+    background: #edf5fd;
+    border-color: #bad2ea;
+    transform: translateY(-2px);
+}
+
+.network-layer-connector:focus-visible {
+    outline: 3px solid rgba(18, 97, 173, 0.25);
+    outline-offset: 2px;
+}
+
+.network-layer-connector--selected {
+    color: #0c559b;
+    background: #e4f1fd;
+    border-color: #4790cf;
+    box-shadow: 0 0 0 3px rgba(18, 97, 173, 0.1);
+}
+
+.network-connector-shape {
+    color: inherit;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.network-connector-arrow {
+    width: 100%;
     display: flex;
     align-items: center;
-    color: #7593b4;
 }
 
-.network-layer-connector span {
+.network-connector-arrow i {
     height: 2px;
     flex: 1;
-    background: #aec2d8;
+    background: currentColor;
+    opacity: 0.65;
 }
 
-.network-layer-connector b {
+.network-connector-arrow b {
     margin-left: -2px;
     font-size: 1.8rem;
-    line-height: 1;
+    line-height: 0.7;
+}
+
+.network-connector-action {
+    color: inherit;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .network-layer-inspector {
