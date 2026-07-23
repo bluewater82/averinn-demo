@@ -29,6 +29,7 @@ function NetworkExplorer({
     const [selectedConnectionId, setSelectedConnectionId] = useState(null);
     const [connectionError, setConnectionError] = useState("");
     const [isLoadingConnection, setIsLoadingConnection] = useState(false);
+    const [connectionData, setConnectionData] = useState(null);
 
     useEffect(() => {
         if (!isOpen) return undefined;
