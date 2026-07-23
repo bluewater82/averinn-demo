@@ -175,13 +175,15 @@ function NetworkExplorer({
                             />
                         </div>
 
-                        <div className="network-explorer-body">
+                    <div className="network-explorer-body">
+                        <div className="network-explorer-main">
                             <div className="network-topology-panel">
                                 <div className="network-section-heading">
                                     <div>
                                         <p>Architecture</p>
                                         <h3>Layer topology</h3>
                                     </div>
+
                                     <span>Select a layer to inspect it</span>
                                 </div>
 
@@ -202,63 +204,65 @@ function NetworkExplorer({
                                                     }
                                                 />
 
-                                            {index < network.layers.length - 1 && (
-                                                <ConnectionButton
-                                                    sourceLayer={layer}
-                                                    destinationLayer={network.layers[index + 1]}
-                                                    isSelected={
-                                                        selectedConnectionId
-                                                        === network.layers[index + 1].id
-                                                    }
-                                                    onSelect={() =>
-                                                        inspectConnection(
-                                                            network.layers[index + 1].id
-                                                        )
-                                                    }
-                                                />
-                                            )}    
+                                                {index < network.layers.length - 1 && (
+                                                    <ConnectionButton
+                                                        sourceLayer={layer}
+                                                        destinationLayer={
+                                                            network.layers[index + 1]
+                                                        }
+                                                        isSelected={
+                                                            selectedConnectionId
+                                                            === network.layers[index + 1].id
+                                                        }
+                                                        onSelect={() =>
+                                                            inspectConnection(
+                                                                network.layers[index + 1].id
+                                                            )
+                                                        }
+                                                    />
+                                                )}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-
-                                <section
-                                    className="network-connection-preview"
-                                    aria-live="polite"
-                                >
-                                    {!selectedConnectionId && (
-                                        <p className="network-connection-prompt">
-                                            Select an Inspect button between two layers to view
-                                            that connection.
-                                        </p>
-                                    )}
-
-                                    {isLoadingConnection && (
-                                        <p className="network-connection-status">
-                                            Loading connection data…
-                                        </p>
-                                    )}
-
-                                    {connectionError && (
-                                        <div
-                                            className="network-connection-error"
-                                            role="alert"
-                                        >
-                                            {connectionError}
-                                        </div>
-                                    )}
-
-                                    {connectionData && !isLoadingConnection && (
-                                        <ConnectionSummary connection={connectionData} />
-                                    )}
-                                </section>
-
                             </div>
+                            {/* network-topology-panel ends here */}
 
-                            
+                            <section
+                                className="network-connection-preview"
+                                aria-live="polite"
+                            >
+                                {!selectedConnectionId && (
+                                    <p className="network-connection-prompt">
+                                        Select an Inspect button between two layers to
+                                        view that connection.
+                                    </p>
+                                )}
 
-                            <LayerInspector layer={selectedLayer} />
+                                {isLoadingConnection && (
+                                    <p className="network-connection-status">
+                                        Loading connection data…
+                                    </p>
+                                )}
+
+                                {connectionError && (
+                                    <div
+                                        className="network-connection-error"
+                                        role="alert"
+                                    >
+                                        {connectionError}
+                                    </div>
+                                )}
+
+                                {connectionData && !isLoadingConnection && (
+                                    <ConnectionSummary connection={connectionData} />
+                                )}
+                            </section>
                         </div>
+                        {/* network-explorer-main ends here */}
+
+                        <LayerInspector layer={selectedLayer} />
+                    </div>    
                     </>
                 )}
             </section>
