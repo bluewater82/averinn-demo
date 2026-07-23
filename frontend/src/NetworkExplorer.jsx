@@ -221,38 +221,41 @@ function NetworkExplorer({
                                         ))}
                                     </div>
                                 </div>
+
+                                <section
+                                    className="network-connection-preview"
+                                    aria-live="polite"
+                                >
+                                    {!selectedConnectionId && (
+                                        <p className="network-connection-prompt">
+                                            Select an Inspect button between two layers to view
+                                            that connection.
+                                        </p>
+                                    )}
+
+                                    {isLoadingConnection && (
+                                        <p className="network-connection-status">
+                                            Loading connection data…
+                                        </p>
+                                    )}
+
+                                    {connectionError && (
+                                        <div
+                                            className="network-connection-error"
+                                            role="alert"
+                                        >
+                                            {connectionError}
+                                        </div>
+                                    )}
+
+                                    {connectionData && !isLoadingConnection && (
+                                        <ConnectionSummary connection={connectionData} />
+                                    )}
+                                </section>
+
                             </div>
 
-                            <section
-                                className="network-connection-preview"
-                                aria-live="polite"
-                            >
-                                {!selectedConnectionId && (
-                                    <p className="network-connection-prompt">
-                                        Select an Inspect button between two layers to view
-                                        that connection.
-                                    </p>
-                                )}
-
-                                {isLoadingConnection && (
-                                    <p className="network-connection-status">
-                                        Loading connection data…
-                                    </p>
-                                )}
-
-                                {connectionError && (
-                                    <div
-                                        className="network-connection-error"
-                                        role="alert"
-                                    >
-                                        {connectionError}
-                                    </div>
-                                )}
-
-                                {connectionData && !isLoadingConnection && (
-                                    <ConnectionSummary connection={connectionData} />
-                                )}
-                            </section>
+                            
 
                             <LayerInspector layer={selectedLayer} />
                         </div>
@@ -358,51 +361,132 @@ function ConnectionSummary({ connection }) {
         destinationCount * sourceCount;
 
     return (
-        <div className="network-connection-summary">
-            <div>
-                <p className="network-connection-eyebrow">
-                    Selected transformation
-                </p>
+        <div className="network-connection-details">
+            <div className="network-connection-summary">
+                <div>
+                    <p className="network-connection-eyebrow">
+                        Selected transformation
+                    </p>
 
-                <h3>
-                    {connection.source_layer_name}
-                    {" → "}
-                    {connection.destination_layer_name}
-                </h3>
+                    <h3>
+                        {connection.source_layer_name}
+                        {" → "}
+                        {connection.destination_layer_name}
+                    </h3>
 
-                <p>
-                    <code>z = Wa + b</code>
-                </p>
+                    <p>
+                        <code>z = Wa + b</code>
+                    </p>
+                </div>
+
+                <dl className="network-connection-facts">
+                    <div>
+                        <dt>Weight matrix</dt>
+                        <dd>
+                            {destinationCount}
+                            {" × "}
+                            {sourceCount}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Weights</dt>
+                        <dd>{weightCount.toLocaleString()}</dd>
+                    </div>
+
+                    <div>
+                        <dt>Biases</dt>
+                        <dd>
+                            {connection.biases.length.toLocaleString()}
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>Activation</dt>
+                        <dd>{connection.activation || "Linear"}</dd>
+                    </div>
+                </dl>
             </div>
 
-            <dl className="network-connection-facts">
-                <div>
-                    <dt>Weight matrix</dt>
-                    <dd>
-                        {destinationCount}
-                        {" × "}
-                        {sourceCount}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt>Weights</dt>
-                    <dd>{weightCount.toLocaleString()}</dd>
-                </div>
-
-                <div>
-                    <dt>Biases</dt>
-                    <dd>
-                        {connection.biases.length.toLocaleString()}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt>Activation</dt>
-                    <dd>{connection.activation || "Linear"}</dd>
-                </div>
-            </dl>
+            <WeightHeatmap connection= {connection} />
         </div>
+    );
+}
+
+function WeightHeatmap({ connection }) {
+    const maximumAbsolute =
+        connection.statistics.maximum_absolute || 1;
+
+    return (
+        <section className="network-weight-panel">
+            <div className="network-weight-heading">
+                <div>
+                    <p className="network-connection-eyebrow">
+                        Weight matrix
+                    </p>
+                    <h3>
+                        Destination neurons × source neurons
+                    </h3>
+                </div>
+
+                <div
+                    className="network-weight-legend"
+                    aria-label="Weight color legend"
+                >
+                    <span>Negative</span>
+                    <i />
+                    <span>Zero</span>
+                    <b />
+                    <span>Positive</span>
+                </div>
+            </div>
+
+            <div className="network-heatmap-scroll">
+                <div
+                    className="network-heatmap"
+                    style={{
+                        gridTemplateColumns:
+                            `repeat(${connection.weight_shape[1]}, 28px)`
+                    }}
+                    role="grid"
+                    aria-label={
+                        `Weight matrix from ` +
+                        `${connection.source_layer_name} to ` +
+                        `${connection.destination_layer_name}`
+                    }
+                >
+                    {connection.weights.flatMap(
+                        (row, destinationIndex) =>
+                            row.map((weight, sourceIndex) => (
+                                <div
+                                    key={
+                                        `${destinationIndex}-${sourceIndex}`
+                                    }
+                                    className="network-weight-cell"
+                                    style={{
+                                        backgroundColor: getWeightColor(
+                                            weight,
+                                            maximumAbsolute
+                                        )
+                                    }}
+                                    title={
+                                        `W[${destinationIndex}, ` +
+                                        `${sourceIndex}] = ` +
+                                        `${weight.toFixed(6)}`
+                                    }
+                                    role="gridcell"
+                                    aria-label={
+                                        `Destination neuron ` +
+                                        `${destinationIndex}, source neuron ` +
+                                        `${sourceIndex}, weight ` +
+                                        `${weight.toFixed(6)}`
+                                    }
+                                />
+                            ))
+                    )}
+                </div>
+            </div>
+        </section>
     );
 }
 
@@ -476,6 +560,25 @@ function formatInteger(value) {
     return Number.isFinite(Number(value))
         ? Number(value).toLocaleString()
         : "—";
+}
+
+function getWeightColor(weight, maximumAbsolute) {
+    const intensity = Math.min(
+        Math.abs(weight) / maximumAbsolute,
+        1
+    );
+
+    const alpha = 0.12 + intensity * 0.88;
+
+    if (weight < 0) {
+        return `rgba(34, 102, 170, ${alpha})`;
+    }
+
+    if (weight > 0) {
+        return `rgba(221, 132, 33, ${alpha})`;
+    }
+
+    return "#edf1f5";
 }
 
 function capitalize(value) {
